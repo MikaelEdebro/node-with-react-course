@@ -5,8 +5,9 @@ const mongoose = require('mongoose')
 const User = mongoose.model('user')
 
 passport.serializeUser((user, done) => done(null, user.id))
-passport.deserializeUser((id, done) => {
-  User.findById(id).then(user => done(null, user))
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id)
+  done(null, user)
 })
 
 passport.use(
@@ -17,21 +18,21 @@ passport.use(
       callbackURL: '/auth/google/callback',
       proxy: true
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       console.log('profile', profile)
-      User.findOne({
+      const existingUser = await User.findOne({
         userId: profile.id
-      }).then(existingUser => {
-        if (existingUser) {
-          done(null, existingUser)
-        } else {
-          new User({
-            googleId: profile.id
-          })
-            .save()
-            .then(newUser => done(null, newUser))
-        }
       })
+
+      if (existingUser) {
+        return done(null, existingUser)
+      }
+
+      const newUser = await new User({
+        googleId: profile.id
+      }).save()
+
+      done(null, newUser)
     }
   )
 )
