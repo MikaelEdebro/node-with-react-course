@@ -11,7 +11,7 @@ const mongoose = require('mongoose')
 mongoose.connect(keys.mongoURI)
 
 // mongoose models
-require('./models/User')
+require('./models/UserModel')
 require('./models/Survey')
 
 // passport config
